@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clonar el repositorio
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
 
       - name: Verificar convenciones de commit
         run: npx conventional-changelog-lint -i ${{ github.event.inputs.range }} -p angular
@@ -21,10 +23,20 @@ jobs:
       - name: Generar versiones
         run: npx standard-version --skip.changelog
 
-      - name: Agregar etiquetas de version
-        uses: andstor/git-add-tag-action@v2.2.0
-        with:
-          tag: v${{ env.npm_package_version }}
-          message: v${{ env.npm_package_version }}
-          push: true
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.61.0 # Don't use @master unless you're happy to test the latest version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
 
+          #- name: Bump version and push tag
+          #  id: tag_version
+          #  uses: mathieudutour/github-tag-action@v6.1
+          #  with:
+          #    github_token: ${{ secrets.GITHUB_TOKEN }}
+            #- name: Create a GitHub release
+            #  uses: ncipollo/release-action@v1
+            #  with:
+            #    tag: ${{ steps.tag_version.outputs.new_tag }}
+            #    name: Release ${{ steps.tag_version.outputs.new_tag }}
+            #    body: ${{ steps.tag_version.outputs.changelog }}
