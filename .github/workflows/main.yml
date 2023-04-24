@@ -18,6 +18,9 @@ jobs:
         with:
           node-version: 16
 
+      - name: Instalar dependencias
+        run: npm install conventional-changelog-eslint
+
       - name: Verificar convenciones de commit
         run: npx conventional-changelog-eslint -i ${{ github.event.inputs.range }} -p angular
 
@@ -44,3 +47,6 @@ jobs:
             #    tag: ${{ steps.tag_version.outputs.new_tag }}
             #    name: Release ${{ steps.tag_version.outputs.new_tag }}
             #    body: ${{ steps.tag_version.outputs.changelog }}
+
+
+        # https://github.com/anothrNick/github-tag-action
