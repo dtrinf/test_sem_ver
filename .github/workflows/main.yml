@@ -19,7 +19,7 @@ jobs:
           node-version: 16
 
       - name: Verificar convenciones de commit
-        run: npx conventional-changelog-lint -i ${{ github.event.inputs.range }} -p angular
+        run: npx conventional-changelog-eslint -i ${{ github.event.inputs.range }} -p angular
 
       - name: Generar registro de cambios
         run: npx conventional-changelog -i ${{ github.event.inputs.range }} -s -p angular -o CHANGELOG.md
