@@ -1,0 +1,30 @@
+name: Pipeline de Github
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v2
+
+      - name: Verificar convenciones de commit
+        run: npx conventional-changelog-lint -i ${{ github.event.inputs.range }} -p angular
+
+      - name: Generar registro de cambios
+        run: npx conventional-changelog -i ${{ github.event.inputs.range }} -s -p angular -o CHANGELOG.md
+
+      - name: Generar versiones
+        run: npx standard-version --skip.changelog
+
+      - name: Agregar etiquetas de version
+        uses: andstor/git-add-tag-action@v2.2.0
+        with:
+          tag: v${{ env.npm_package_version }}
+          message: v${{ env.npm_package_version }}
+          push: true
+
