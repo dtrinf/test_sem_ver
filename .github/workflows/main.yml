@@ -18,11 +18,13 @@ jobs:
         with:
           node-version: 16
 
-      - name: Instalar dependencias
-        run: npm install conventional-changelog-eslint
-
-      - name: Verificar convenciones de commit
-        run: npx conventional-changelog-eslint -i ${{ github.event.inputs.range }} -p angular
+            #- name: Verificar convenciones de commit
+            #  run: npx conventional-changelog-eslint -i ${{ github.event.inputs.range }} -p angular
+      - name: Lint commits, branches, and pull requests
+        uses: aschbacd/gitlint-action@v1.1.1
+        with:
+          re-commit-message-subject: ^(\[[A-Z]+\-[0-9]+\] )?[A-Z].*((?!\.).)$
+          re-pull-request-title: ^(\[[A-Z]+\-[0-9]+\] )?[A-Z].*((?!\.).)$
 
       - name: Generar registro de cambios
         run: npx conventional-changelog -i ${{ github.event.inputs.range }} -s -p angular -o CHANGELOG.md
