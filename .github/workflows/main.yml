@@ -24,7 +24,7 @@ jobs:
       
       - name: Verificar convenciones de commit
         run: |
-          gitlint -c title-match-regex.regex='^(?:build|breaking|chore|ci|docs|feat|fix|style|refactor|perf|test|skip|none|patch): .*'
+          gitlint -c title-match-regex.regex='^(?:mayor|build|breaking|chore|ci|docs|feat|fix|style|refactor|perf|test|skip|none|patch)(.*)?(!:|:.*)'
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0
@@ -37,9 +37,9 @@ jobs:
           # mode: ContinuousDelivery
           mode: MainLine # Only add this if you want every version to be created automatically on your main branch.
           tag-prefix: "[vV]"
-          major-version-bump-message: '^(build|chore|docs|feat|fix|perf|refactor|revert|style)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)'
-          minor-version-bump-message: '^(feat)(\\([\\w\\s-]*\\))?:'
-          patch-version-bump-message: '^(build|chore|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:'
+          major-version-bump-message: '^(build|mayor)(.*)?(!:|:.*)'
+          minor-version-bump-message: '^(chore|docs|feat|fix|perf|refactor|revert)(.*)?(!:|:.*)'
+          patch-version-bump-message: '^(docs|fix|style)(.*)?(!:|:.*)'
           no-bump-message: '(none|skip|ci|test):\s?'
           EOF
 
