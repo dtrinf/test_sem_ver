@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - run: npm install conventional-commits
+      - run: npm install conventional-commits --global
       - run: conventional-commits --verify
       - run: |
           echo "The release version is: $(conventional-commits --get-release-version)" >> release-version.txt
