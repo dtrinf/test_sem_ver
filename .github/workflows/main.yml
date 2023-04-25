@@ -14,9 +14,9 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
+      # - uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 16
 
             #- name: Verificar convenciones de commit
             #  run: npx conventional-changelog-eslint -i ${{ github.event.inputs.range }} -p angular
@@ -26,29 +26,29 @@ jobs:
           re-commit-message-subject: ^(\[[A-Z]+\-[0-9]+\] )?[A-Z].*((?!\.).)$
           re-pull-request-title: ^(\[[A-Z]+\-[0-9]+\] )?[A-Z].*((?!\.).)$
 
-      - name: Generar registro de cambios
-        run: npx conventional-changelog -i ${{ github.event.inputs.range }} -s -p angular -o CHANGELOG.md
+      # - name: Generar registro de cambios
+      #   run: npx conventional-changelog -i ${{ github.event.inputs.range }} -s -p angular -o CHANGELOG.md
 
-      - name: Generar versiones
-        run: npx standard-version --skip.changelog
+      # - name: Generar versiones
+      #   run: npx standard-version --skip.changelog
 
-      - name: Bump version and push tag
-        uses: anothrNick/github-tag-action@1.61.0 # Don't use @master unless you're happy to test the latest version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WITH_V: true
+      # - name: Bump version and push tag
+      #   uses: anothrNick/github-tag-action@1.61.0 # Don't use @master unless you're happy to test the latest version
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     WITH_V: true
 
-          #- name: Bump version and push tag
-          #  id: tag_version
-          #  uses: mathieudutour/github-tag-action@v6.1
-          #  with:
-          #    github_token: ${{ secrets.GITHUB_TOKEN }}
-            #- name: Create a GitHub release
-            #  uses: ncipollo/release-action@v1
-            #  with:
-            #    tag: ${{ steps.tag_version.outputs.new_tag }}
-            #    name: Release ${{ steps.tag_version.outputs.new_tag }}
-            #    body: ${{ steps.tag_version.outputs.changelog }}
+      # - name: Bump version and push tag
+      #   id: tag_version
+      #   uses: mathieudutour/github-tag-action@v6.1
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create a GitHub release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     tag: ${{ steps.tag_version.outputs.new_tag }}
+      #     name: Release ${{ steps.tag_version.outputs.new_tag }}
+      #     body: ${{ steps.tag_version.outputs.changelog }}
 
 
         # https://github.com/anothrNick/github-tag-action
