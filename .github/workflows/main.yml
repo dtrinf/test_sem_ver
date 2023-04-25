@@ -1,5 +1,10 @@
 name: Pipeline de Github
 
+permissions:
+  actions: write
+  contents: write
+  deployments: write
+
 on:
   push:
     branches:
