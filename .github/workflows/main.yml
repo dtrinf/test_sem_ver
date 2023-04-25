@@ -18,7 +18,8 @@ jobs:
         run: pip3 install gitlint
       
       - name: Verificar convenciones de commit
-        run: gitlint --config .gitlint
+        run: |
+          gitlint -c title-match-regex.regex='^(?:build|chore|ci|docs|feat|fix|style|refactor|perf|test): .*'
 
       # - uses: actions/setup-node@v3
       #   with:
