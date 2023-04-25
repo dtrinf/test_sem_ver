@@ -45,6 +45,13 @@ jobs:
       - name: Print Config
         run: cat /tmp/GitVersion.yml
 
+      - name: Display GitVersion config
+        uses: gittools/actions/gitversion/execute@v0
+        with:
+          useConfigFile: true
+          configFilePath: /tmp/GitVersion.yml
+          additionalArguments: '/showConfig'
+
       - name: Run GitVersion
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0
