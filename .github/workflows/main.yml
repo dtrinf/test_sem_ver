@@ -21,6 +21,12 @@ jobs:
         run: |
           gitlint -c title-match-regex.regex='^(?:build|chore|ci|docs|feat|fix|style|refactor|perf|test): .*'
 
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+      
+      
+      
+
       # - uses: actions/setup-node@v3
       #   with:
       #     node-version: 16
