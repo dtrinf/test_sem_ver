@@ -18,7 +18,7 @@ jobs:
         run: pip3 install gitlint
       
       - name: Verificar convenciones de commit
-        run: gitlint --config .gitlintconfig
+        run: gitlint
 
       # - uses: actions/setup-node@v3
       #   with:
