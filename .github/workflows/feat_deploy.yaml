@@ -30,11 +30,13 @@ env:
   VERSION: $GITHUB_REF
   APP: $GITHUB_REPOSITORY
   RUNNER_LABEL: "ubuntu-latest"
+  ENV: ${{ inputs.ENV }}
+  CLIENT: ${{ inputs.CLIENT }}
 
 jobs:
   build-and-deploy:
     name: Build and Deploy
-    runs-on: ${{ inputs.RUNNER_LABEL }}
+    runs-on: ${{ vars.RUNNER_LABEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -42,10 +44,7 @@ jobs:
           fetch-depth: 0
       - name: Print vars
         run: |
-          echo "APP: ${{ inputs.APP }}"
-          echo "VERSION: ${{ inputs.VERSION }}"
-          echo "AWS_CREDENTIALS_FILE_NAME: ${{ inputs.AWS_CREDENTIALS_FILE_NAME }}"
-          echo "PRODUCT_FILE: ${{ inputs.PRODUCT_FILE }}"
-          echo "DEPLOYMENT_FILE: ${{ inputs.DEPLOYMENT_FILE }}"
-          echo "ENV: ${{ inputs.ENV }}"
-          echo "CLIENT: ${{ inputs.CLIENT }}"
+          echo "APP: $APP"
+          echo "VERSION: $VERSION"
+          echo "ENV: $ENV"
+          echo "CLIENT: $CLIENT"
