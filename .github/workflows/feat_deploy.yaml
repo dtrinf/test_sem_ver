@@ -1,6 +1,4 @@
-name: Build and Deploy Service Feature Branch
-
-run-name: "${{ inputs.SERVICE_NAME }}_${{ inputs.CLIENT }}_deploy"
+run-name: "${{ inputs.CLIENT }}_${{ inputs.ENV }}_deploy"
 
 ###
 # Workflow to Build and Deploy a Service Feature Branch
@@ -26,13 +24,11 @@ on:
         default: $GITHUB_REF
       ENV:
         type: string
-        required: false
-        default: "qa"
+        required: true
         description: "Environment to deploy to"
       CLIENT:
         type: string
-        required: false
-        default: "lifebit_internal"
+        required: true
         description: "Client to deploy to"
 
 jobs:
