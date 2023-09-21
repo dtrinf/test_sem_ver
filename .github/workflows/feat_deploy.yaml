@@ -9,11 +9,11 @@ run-name: "${{ inputs.SERVICE_NAME }}_${{ inputs.CLIENT }}_deploy"
 on:
   workflow_dispatch:
     inputs:
-      #   RUNNER_LABEL:
-      #     type: string
-      #     required: false
-      #     description: "Runner label to run the workflow on"
-      #     default: "ubuntu-latest"
+      RUNNER_LABEL:
+        type: string
+        required: false
+        description: "Runner label to run the workflow on"
+        default: "ubuntu-latest"
       ENV:
         type: string
         required: false
@@ -29,14 +29,13 @@ on:
 env:
   VERSION: $GITHUB_REF
   APP: $GITHUB_REPOSITORY
-  RUNNER_LABEL: "ubuntu-latest"
   ENV: ${{ inputs.ENV }}
   CLIENT: ${{ inputs.CLIENT }}
 
 jobs:
   build-and-deploy:
     name: Build and Deploy
-    runs-on: $RUNNER_LABEL
+    runs-on: ${{ inputs.RUNNER_LABEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
