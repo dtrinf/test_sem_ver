@@ -1,0 +1,29 @@
+name: Build and Deploy Service Feature Branch
+
+###
+# Workflow to Build and Deploy a Service Feature Branch
+###
+
+on:
+  workflow_dispatch:
+    inputs:
+      ENV:
+        type: string
+        required: false
+        default: "qa"
+        description: "Environment to deploy to"
+      CLIENT:
+        type: choice
+        required: false
+        default: "lifebit_internal"
+        description: "Client to deploy to"
+        options:
+          - lifebit_internal
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    uses: ./.github/workflows/feat_deploy.yaml
+    with:
+      client: ${{ inputs.CLIENT }}
+      env: ${{ inputs.ENV }}
