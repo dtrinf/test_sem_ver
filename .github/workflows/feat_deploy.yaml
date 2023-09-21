@@ -7,7 +7,7 @@ run-name: "${{ inputs.SERVICE_NAME }}_${{ inputs.CLIENT }}_deploy"
 ###
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       RUNNER_LABEL:
         type: string
