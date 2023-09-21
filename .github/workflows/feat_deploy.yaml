@@ -7,13 +7,23 @@ run-name: "${{ inputs.SERVICE_NAME }}_${{ inputs.CLIENT }}_deploy"
 ###
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       RUNNER_LABEL:
         type: string
         required: false
         description: "Runner label to run the workflow on"
         default: "ubuntu-latest"
+      APP:
+        type: string
+        required: false
+        description: "App name to deploy"
+        default: $GITHUB_REPOSITORY
+      VERSION:
+        type: string
+        required: false
+        description: "App version to deploy"
+        default: $GITHUB_REF
       ENV:
         type: string
         required: false
@@ -24,13 +34,6 @@ on:
         required: false
         default: "lifebit_internal"
         description: "Client to deploy to"
-
-# Environment variables
-env:
-  VERSION: $GITHUB_REF
-  APP: $GITHUB_REPOSITORY
-  ENV: ${{ inputs.ENV }}
-  CLIENT: ${{ inputs.CLIENT }}
 
 jobs:
   build-and-deploy:
@@ -43,7 +46,7 @@ jobs:
           fetch-depth: 0
       - name: Print vars
         run: |
-          echo "APP: $APP"
-          echo "VERSION: $VERSION"
-          echo "ENV: $ENV"
-          echo "CLIENT: $CLIENT"
+          echo "APP: ${{ inputs.APP }}"
+          echo "VERSION: ${{ inputs.VERSION }}"
+          echo "ENV: ${{ inputs.ENV }}"
+          echo "CLIENT: ${{ inputs.CLIENT }}"
