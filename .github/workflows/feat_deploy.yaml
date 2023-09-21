@@ -1,0 +1,69 @@
+name: Build and Deploy Service Feature Branch
+
+run-name: "${{ inputs.SERVICE_NAME }}_${{ inputs.CLIENT }}_deploy"
+
+###
+# Workflow to Build and Deploy a Service Feature Branch
+###
+
+on:
+  workflow_call:
+    inputs:
+      RUNNER_LABEL:
+        type: string
+        required: false
+        description: "Runner label to run the workflow on"
+        default: "ubuntu-latest"
+      APP:
+        type: string
+        required: false
+        description: "App name to deploy"
+        default: $GITHUB_REPOSITORY
+      VERSION:
+        type: string
+        required: false
+        description: "App version to deploy"
+        default: $GITHUB_REF
+        # AWS_CREDENTIALS_FILE_NAME:
+        #   type: string
+        #   required: true
+        #   description: "AWS credentials file name"
+      PRODUCT_FILE:
+        type: string
+        required: false
+        default: "cloudos_product.json"
+        description: "CloudOS Product file name"
+      DEPLOYMENT_FILE:
+        type: string
+        required: false
+        default: "cloudos_deployments.json"
+        description: "CloudOS Deployments file name"
+      ENV:
+        type: string
+        required: false
+        default: "qa"
+        description: "Environment to deploy to"
+      CLIENT:
+        type: string
+        required: false
+        default: "lifebit_internal"
+        description: "Client to deploy to"
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ${{ inputs.RUNNER_LABEL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Print vars
+        run: |
+          echo "APP: ${{ inputs.APP }}"
+          echo "VERSION: ${{ inputs.VERSION }}"
+          echo "AWS_CREDENTIALS_FILE_NAME: ${{ inputs.AWS_CREDENTIALS_FILE_NAME }}"
+          echo "PRODUCT_FILE: ${{ inputs.PRODUCT_FILE }}"
+          echo "DEPLOYMENT_FILE: ${{ inputs.DEPLOYMENT_FILE }}"
+          echo "ENV: ${{ inputs.ENV }}"
+          echo "CLIENT: ${{ inputs.CLIENT }}"
