@@ -9,35 +9,11 @@ run-name: "${{ inputs.SERVICE_NAME }}_${{ inputs.CLIENT }}_deploy"
 on:
   workflow_dispatch:
     inputs:
-      RUNNER_LABEL:
-        type: string
-        required: false
-        description: "Runner label to run the workflow on"
-        default: "ubuntu-latest"
-      APP:
-        type: string
-        required: false
-        description: "App name to deploy"
-        default: $GITHUB_REPOSITORY
-      VERSION:
-        type: string
-        required: false
-        description: "App version to deploy"
-        default: $GITHUB_REF
-        # AWS_CREDENTIALS_FILE_NAME:
-        #   type: string
-        #   required: true
-        #   description: "AWS credentials file name"
-      PRODUCT_FILE:
-        type: string
-        required: false
-        default: "cloudos_product.json"
-        description: "CloudOS Product file name"
-      DEPLOYMENT_FILE:
-        type: string
-        required: false
-        default: "cloudos_deployments.json"
-        description: "CloudOS Deployments file name"
+      #   RUNNER_LABEL:
+      #     type: string
+      #     required: false
+      #     description: "Runner label to run the workflow on"
+      #     default: "ubuntu-latest"
       ENV:
         type: string
         required: false
@@ -48,6 +24,12 @@ on:
         required: false
         default: "lifebit_internal"
         description: "Client to deploy to"
+
+# Environment variables
+env:
+  VERSION: $GITHUB_REF
+  APP: $GITHUB_REPOSITORY
+  RUNNER_LABEL: "ubuntu-latest"
 
 jobs:
   build-and-deploy:
