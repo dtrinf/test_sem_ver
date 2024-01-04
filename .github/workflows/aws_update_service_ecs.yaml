@@ -37,8 +37,8 @@ jobs:
       id: list-services
     - id: address_service_name
       run: |
-        echo 'SERVICE_NAME=" ${{ inputs.service }} "' 
-        echo 'SERVICE_NAME=" ${{ inputs.service }} "' >> $GITHUB_OUTPUT
+        echo 'SERVICE_NAME= ${{ inputs.service }} ' 
+        echo 'SERVICE_NAME= ${{ inputs.service }} ' >> $GITHUB_OUTPUT
     - name: update ${{ inputs.service }} ECS services
       if: contains(steps.list-services.outputs.SERVICES, steps.address_service_name.outputs.SERVICE_NAME) && !inputs.all_services
       run: |
