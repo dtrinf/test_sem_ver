@@ -37,11 +37,14 @@ jobs:
       id: list-services
     - id: restart_service
       run: |
+        RESTART=false
         if echo "${{ steps.list-services.outputs.SERVICES }}" | grep -q " ${{ inputs.service }} "; then
-          echo "RESTART=true" >> $GITHUB_OUTPUT
+          RESTART=true
         else
-          echo "RESTART=false" >> $GITHUB_OUTPUT
+          RESTART=false
         fi
+        echo "RESTART=$RESTART" >> $GITHUB_OUTPUT
+        echo "$RESTART"
     - name: update ${{ inputs.service }} ECS services
       if: ${{ steps.restart_service.outputs.RESTART }} == 'true' && !inputs.all_services
       run: |
