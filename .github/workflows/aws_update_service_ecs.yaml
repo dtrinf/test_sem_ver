@@ -35,23 +35,31 @@ jobs:
       run: mkdir -p ~/.aws
     - run: echo "SERVICES=job-process-metrics-dev2 data-factory-dev2 controller-aws-stg web-application-stg api-server-dev passport-issuer-stg web-application-dev2 composer-api-dev2 nf-config-dev2 nextflow-server-dev2 connect-cohort-browser-dev jupyter-proxy-dev2 resource-tags-dev cohort-browser-stg data-factory-dev connect-api-dev jupyter-proxy-stg controller-aws-dev2 airlock-api-dev api-monitor-dev resource-tags-stg airlock-webapp-dev2 metadata-search-dev2 metadata-search-dev data-catalogue-dev2 data-access-dev2 cohort-browser-dev airlock-api-dev2 api-message-gateway-dev2 web-application-dev controller-aws-dev nf-config-dev api-server-dev2 api-server-stg passport-issuer-dev composer-workflow-export-dev2 cohort-browser-dev2 data-access-stg jupyter-proxy-dev airlock-api-stg resource-tags-dev2 airlock-webapp-dev nf-config-stg data-access-dev private-airlock-api-dev passport-issuer-dev2 passport-broker-dev zipkin-stg data-catalogue-dev api-monitor-stg api-monitor-dev2 airlock-webapp-stg" >> $GITHUB_OUTPUT
       id: list-services
-    - id: restart_service
-      run: |
-        RESTART=false
-        if echo "${{ steps.list-services.outputs.SERVICES }}" | grep -q " ${{ inputs.service }} "; then
-          RESTART=true
-        else
-          RESTART=false
-        fi
-        echo "RESTART=$RESTART" >> $GITHUB_OUTPUT
-        echo "$RESTART"
     - name: update ${{ inputs.service }} ECS services
-      if: ${{ steps.restart_service.outputs.RESTART == 'true' && !inputs.all_services }}
+      if: contains(steps.list-services.outputs.SERVICES, ' ${{ inputs.service }} ') && !inputs.all_services
       run: |
-        echo "Simple comparison: ${{ steps.restart_service.outputs.RESTART == 'true' }}"
-        echo "Double comparison: ${{ steps.restart_service.outputs.RESTART == 'true' && !inputs.all_services }} "
         echo ":recycle: ${{ inputs.service }} in ${{ inputs.cluster }} cluster has been updated in ${{ inputs.aws_profile }}." >> $GITHUB_STEP_SUMMARY
     - name: update ${{ inputs.service }} ECS services
-      if: ${{ steps.restart_service.outputs.RESTART  == 'false' && !inputs.all_services }}
+      if: !contains(steps.list-services.outputs.SERVICES, ' ${{ inputs.service }} ') && !inputs.all_services
       run: |
         echo ":warning: ${{ inputs.service }} in ${{ inputs.cluster }} cluster hasn't been found in ${{ inputs.aws_profile }}" >> $GITHUB_STEP_SUMMARY
+    # - id: restart_service
+    #   run: |
+    #     RESTART=false
+    #     if echo "${{ steps.list-services.outputs.SERVICES }}" | grep -q " ${{ inputs.service }} "; then
+    #       RESTART=true
+    #     else
+    #       RESTART=false
+    #     fi
+    #     echo "RESTART=$RESTART" >> $GITHUB_OUTPUT
+    #     echo "$RESTART"
+    # - name: update ${{ inputs.service }} ECS services
+    #   if: ${{ steps.restart_service.outputs.RESTART == 'true' && !inputs.all_services }}
+    #   run: |
+    #     echo "Simple comparison: ${{ steps.restart_service.outputs.RESTART == 'true' }}"
+    #     echo "Double comparison: ${{ steps.restart_service.outputs.RESTART == 'true' && !inputs.all_services }} "
+    #     echo ":recycle: ${{ inputs.service }} in ${{ inputs.cluster }} cluster has been updated in ${{ inputs.aws_profile }}." >> $GITHUB_STEP_SUMMARY
+    # - name: update ${{ inputs.service }} ECS services
+    #   if: ${{ steps.restart_service.outputs.RESTART  == 'false' && !inputs.all_services }}
+    #   run: |
+    #     echo ":warning: ${{ inputs.service }} in ${{ inputs.cluster }} cluster hasn't been found in ${{ inputs.aws_profile }}" >> $GITHUB_STEP_SUMMARY
