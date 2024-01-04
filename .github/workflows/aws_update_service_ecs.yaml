@@ -46,10 +46,10 @@ jobs:
         echo "RESTART=$RESTART" >> $GITHUB_OUTPUT
         echo "$RESTART"
     - name: update ${{ inputs.service }} ECS services
-      if: ${{ steps.restart_service.outputs.RESTART }} == 'true' && !inputs.all_services
+      if: ${{ steps.restart_service.outputs.RESTART == 'true' }}  && !inputs.all_services
       run: |
         echo ":recycle: ${{ inputs.service }} in ${{ inputs.cluster }} cluster has been updated in ${{ inputs.aws_profile }}." >> $GITHUB_STEP_SUMMARY
     - name: update ${{ inputs.service }} ECS services
-      if: github.ref_name == inputs.apply_branch && ${{ steps.restart_service.outputs.RESTART }} == 'false' && !inputs.all_services
+      if: github.ref_name == inputs.apply_branch && ${{ steps.restart_service.outputs.RESTART  == 'false' }} && !inputs.all_services
       run: |
         echo ":warning: ${{ inputs.service }} in ${{ inputs.cluster }} cluster hasn't been found in ${{ inputs.aws_profile }}" >> $GITHUB_STEP_SUMMARY
