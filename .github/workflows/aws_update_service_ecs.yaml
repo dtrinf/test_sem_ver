@@ -8,7 +8,7 @@ name: AWS Update ECS Service workflow
 ###
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       SERVICE:
         type: string
