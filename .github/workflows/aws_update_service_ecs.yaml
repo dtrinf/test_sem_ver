@@ -43,8 +43,8 @@ jobs:
         else
           RESTART=false
         fi
-        echo "$RESTART"
         echo "RESTART=$RESTART" >> $GITHUB_OUTPUT
+        echo "$RESTART"
     - name: update ${{ inputs.service }} ECS services
       if: ${{ steps.restart_service.outputs.RESTART }} == 'true' && !inputs.all_services
       run: |
