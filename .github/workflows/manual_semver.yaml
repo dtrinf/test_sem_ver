@@ -5,8 +5,12 @@ name: Create a SemVer tag and push to GitHub based on a change in the repository
 # This workflow is triggered when a change is pushed to the repository.
 ###
 
+# on:
+#   workflow_dispatch:
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   create_matrix:
