@@ -1,0 +1,59 @@
+name: Create a SemVer tag and push to GitHub based on a change in the repository folders
+
+###
+# Workflow to update Releases.
+# This workflow is triggered when a change is pushed to the repository.
+###
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create_matrix:
+    runs-on: ubuntu-latest
+    name: Create a matrix of services
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Update ECS Service
+        id: set-matrix
+        run: |
+          SERVICES=$(ls -d */ | cut -f1 -d'/')
+
+          # Create a single json array of all the services
+          SERVICES_MATRIX="[]"
+          for SERVICE in $(echo ${SERVICES}); do
+              SERVICES_MATRIX=$(echo "${SERVICES_MATRIX}" | jq --arg name "$SERVICE" '. + [{name: $name}]')
+          done
+          echo "::set-output name=matrix::${SERVICES_MATRIX}"
+    # here, we save the result of this 1st phase to the "outputs"
+
+  create_release:
+    needs: create_matrix
+    runs-on: ubuntu-latest
+    name: Create a SemVer tag and push to GitHub based on a change in the repository folders
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        app: ${{ fromJson(needs.create_matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - '${{ matrix.app.name }}/**'
+
+      # run only if some file in 'src' folder was changed
+      - if: steps.changes.outputs.src == 'true'
+        run: |
+          echo "Changes detected in ${{ matrix.app.name }} folder"
+          echo "Creating a new release for ${{ matrix.app.name }} folder"
+          echo "Creating a new tag for ${{ matrix.app.name }} folder"
+          echo "Pushing the new tag for ${{ matrix.app.name }} folder"
