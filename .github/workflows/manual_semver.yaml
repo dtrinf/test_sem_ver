@@ -31,8 +31,8 @@ jobs:
           for SERVICE in $(echo ${SERVICES}); do
               SERVICES_MATRIX=$(echo "${SERVICES_MATRIX}" | jq --arg name "$SERVICE" '. + [{name: $name}]')
           done
-          echo "::set-output name=matrix::${SERVICES_MATRIX}"
-    # here, we save the result of this 1st phase to the "outputs"
+          echo "${SERVICES_MATRIX}"
+          echo "matrix=$(echo ${SERVICES_MATRIX})" >> "$GITHUB_OUTPUT"
 
   create_release:
     needs: create_matrix
