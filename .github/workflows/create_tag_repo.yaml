@@ -115,7 +115,11 @@ jobs:
         if: steps.tag_resumed.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${{ env.new_resumed_tag }} --generate-notes -t ${{ env.new_resumed_tag }}
+        run: |
+          if gh release list | awk '{print $1}' | grep -q "^${{ env.new_resumed_tag }}$"; then
+            gh release delete -y ${{ env.new_resumed_tag }}
+          fi
+          gh release create ${{ env.new_resumed_tag }} --generate-notes -t ${{ env.new_resumed_tag }}
 
       - name: Summary
         if: always()
@@ -134,4 +138,9 @@ jobs:
             echo "Tag ${{ env.new_resumed_tag }} has been created :rocket:" >> $GITHUB_STEP_SUMMARY
           else
             echo "Failed to create tag ${{ env.new_resumed_tag }} :x:" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [[ ${{ steps.release_resumed.outcome }} == 'success' ]]; then
+            echo "Release ${{ env.new_resumed_tag }} has been created :rocket:" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Failed to create release ${{ env.new_resumed_tag }} :x:" >> $GITHUB_STEP_SUMMARY
           fi
