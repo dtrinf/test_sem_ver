@@ -1,0 +1,113 @@
+name: Create release version
+
+run-name: "${{ format('Create release version on reusable workflows and actions updated: triggered by {0}', github.actor) }}"
+
+###
+# Workflow to create new release version. This workflow will be triggered manually.
+#
+# Inputs:
+#   type: Type of release to create
+#   major: Major version of the release
+#   minor: Minor version of the release
+#   patch: Patch version of the release
+###
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Type of release to create"
+        required: true
+        type: choice
+        options:
+          - "workflows"
+          - "kaniko-action"
+          - "update_release_readme-action"
+      major:
+        description: "Major version of the release"
+        required: true
+        type: number
+        default: "1"
+      minor:
+        description: "Minor version of the release"
+        required: true
+        type: number
+        default: "0"
+      patch:
+        description: "Patch version of the release"
+        required: true
+        type: number
+        default: "0"
+
+jobs:
+  retag:
+    name: Create release version
+    runs-on: "ubuntu-latest"
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Create new workflows tag/release
+        if: ${{ github.event.inputs.type == 'workflows' }}
+        run: |
+          echo new_tag="workflows-v${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}" >> $GITHUB_ENV
+          echo new_resumed_tag="workflows-v${{ github.event.inputs.major }}" >> $GITHUB_ENV
+
+      - name: Create new workflows tag/release
+        if: ${{ github.event.inputs.type == 'kaniko-action' }}
+        run: |
+          echo new_tag="kaniko-v${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}" >> $GITHUB_ENV
+          echo new_resumed_tag="kaniko-v${{ github.event.inputs.major }}" >> $GITHUB_ENV
+
+      - name: Create new workflows tag/release
+        if: ${{ github.event.inputs.type == 'update_release_readme-action' }}
+        run: |
+          echo new_tag="update-release-readme-v${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}" >> $GITHUB_ENV
+          echo new_resumed_tag="update-release-readme-v${{ github.event.inputs.major }}" >> $GITHUB_ENV
+
+      - name: Create tag
+        id: tag
+        run: |
+          git tag ${{ env.new_tag }} -m "Release ${{ env.new_tag }}"
+          git push origin ${{ env.new_tag }}
+
+      - name: Generate Release
+        id: release
+        if: steps.tag.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ env.new_tag }} --generate-notes -t ${{ env.new_tag }}
+
+      - name: Create tag resumed
+        id: tag_resumed
+        if: steps.release.outcome == 'success' && steps.tag.outcome == 'success'
+        run: |
+          git tag ${{ env.new_resumed_tag }} ${{ env.new_tag }} -m "Release ${{ env.new_tag }}" -f
+          git push origin ${{ env.new_resumed_tag }} -f
+
+      - name: Summary
+        if: always()
+        run: |
+          if [[ ${{ steps.tag.outcome }} == 'success' ]]; then
+            echo "Tag ${{ env.new_tag }} has been created :rocket:" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Failed to create tag ${{ env.new_tag }} :x:" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [[ ${{ steps.release.outcome }} == 'success' ]]; then
+            echo "Release ${{ env.new_tag }} has been created :rocket:" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Failed to create release ${{ env.new_tag }} :x:" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [[ ${{ steps.tag_resumed.outcome }} == 'success' ]]; then
+            echo "Tag ${{ env.new_resumed_tag }} has been created :rocket:" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Failed to create tag ${{ env.new_resumed_tag }} :x:" >> $GITHUB_STEP_SUMMARY
+          fi
