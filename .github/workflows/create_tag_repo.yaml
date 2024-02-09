@@ -39,8 +39,22 @@ on:
         type: number
         default: "0"
 
+# All the permissions are required to create a new release
 permissions:
+  actions: write
+  checks: write
   contents: write
+  deployments: write
+  id-token: write
+  issues: write
+  discussions: write
+  packages: write
+  pages: write
+  pull-requests: write
+  repository-projects: write
+  security-events: write
+  statuses: write
+
 
 jobs:
   retag:
