@@ -78,13 +78,13 @@ jobs:
           echo new_tag="workflows-v${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}" >> $GITHUB_ENV
           echo new_resumed_tag="workflows-v${{ github.event.inputs.major }}" >> $GITHUB_ENV
 
-      - name: Create new workflows tag/release
+      - name: Create new kaniko-action tag/release
         if: ${{ github.event.inputs.type == 'kaniko-action' }}
         run: |
           echo new_tag="kaniko-v${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}" >> $GITHUB_ENV
           echo new_resumed_tag="kaniko-v${{ github.event.inputs.major }}" >> $GITHUB_ENV
 
-      - name: Create new workflows tag/release
+      - name: Create new update_release_readme-action tag/release
         if: ${{ github.event.inputs.type == 'update_release_readme-action' }}
         run: |
           echo new_tag="update-release-readme-v${{ github.event.inputs.major }}.${{ github.event.inputs.minor }}.${{ github.event.inputs.patch }}" >> $GITHUB_ENV
@@ -109,6 +109,13 @@ jobs:
         run: |
           git tag ${{ env.new_resumed_tag }} ${{ env.new_tag }} -m "Release ${{ env.new_tag }}" -f
           git push origin ${{ env.new_resumed_tag }} -f
+
+      - name: Generate Release resumed
+        id: release
+        if: steps.tag_resumed.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ env.new_resumed_tag }} --generate-notes -t ${{ env.new_resumed_tag }}
 
       - name: Summary
         if: always()
