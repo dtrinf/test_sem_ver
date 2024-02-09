@@ -39,6 +39,9 @@ on:
         type: number
         default: "0"
 
+permissions:
+  contents: write
+
 jobs:
   retag:
     name: Create release version
