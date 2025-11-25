@@ -1,0 +1,4 @@
+--extra-index-url=https://repo.clarivate.io/artifactory/api/pypi/wos-central-pypi/simple
+sardevops-jenkins-library>=0.3.0
+
+

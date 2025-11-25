@@ -1,0 +1,194 @@
+name: TAG + Update DAP version
+
+run-name: "${{ format('Update DAP Databricks Pipelines version: triggered by {0}', github.actor) }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        type: choice
+        description: Branch name to tag
+        options:
+          - develop
+          - main
+      dry_run:
+        type: boolean
+        description: "Dry run the tagging process without pushing changes"
+  # push:
+  #   branches:
+  #     - main
+  #     - master
+
+env:
+  DAP_PIPELINE_FILE: "dap-pipeline.yaml"
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  generate_dap_matrix:
+    outputs:
+      matrix: ${{ steps.read_dap_values.outputs.matrix }}
+    name: Create DAP jobs matrix
+    runs-on: self-hosted-dind
+    container: pti-docker.repo.clarivate.io/ghar:latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install yq and jq
+        run: |
+          arch=$(uname -m)
+          if [ "$arch" == "x86_64" ]; then
+            echo "Downloading yq for x86_64"
+            APP_ARCH="amd64"
+          elif [ "$arch" == "arm64" ]; then
+            echo "Downloading yq for arm64"
+            APP_ARCH="arm64"
+          fi
+          curl -L -o yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${APP_ARCH}
+          curl -L -o jq https://github.com/jqlang/jq/releases/latest/download/jq-linux-${APP_ARCH}
+          chmod +x yq jq
+          mv *q /tmp/
+      - name: Get DAP values
+        id: read_dap_values
+        run: |
+          DATA=$(/tmp/yq -o=json '.' ${{ env.DAP_PIPELINE_FILE }})
+          echo "$DATA"
+          # echo "organization=$(echo ${DATA} | /tmp/jq -r '.organization')" >> $GITHUB_OUTPUT
+          # echo "github_root=$(echo ${DATA} | /tmp/jq -r '.github_root')" >> $GITHUB_OUTPUT
+          # echo "dap_version=$(echo ${DATA} | /tmp/jq -r '.dap_version')" >> $GITHUB_OUTPUT
+          # echo "dap_repos=$(echo ${DATA} | /tmp/jq -r '.dap_repos')" >> $GITHUB_OUTPUT
+          echo "matrix=$(echo ${DATA} | /tmp/jq -c '.')" >> $GITHUB_OUTPUT
+
+  update_dap_jobs_version:
+    name: DAP repositories tagging and version update
+    runs-on: self-hosted-dind
+    needs: generate_dap_matrix
+    container: pti-docker.repo.clarivate.io/ghar:latest
+    strategy:
+      matrix:
+        repo: ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_repos }}
+
+    steps:
+      - name: Install yq and jq
+        run: |
+          echo "Running for ${{ matrix.repo }}"
+          echo "DAP Version: ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}"
+          # Install yq and jq
+          arch=$(uname -m)
+          if [ "$arch" == "x86_64" ]; then
+            echo "Downloading yq for x86_64"
+            APP_ARCH="amd64"
+          elif [ "$arch" == "arm64" ]; then
+            echo "Downloading yq for arm64"
+            APP_ARCH="arm64"
+          fi
+          curl -L -o yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${APP_ARCH}
+          curl -L -o jq https://github.com/jqlang/jq/releases/latest/download/jq-linux-${APP_ARCH}
+          chmod +x yq jq
+          mv *q /tmp/
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.WOS_JENKINS_GITHUB_APP_ID }}
+          private-key: ${{ secrets.WOS_JENKINS_GITHUB_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            ${{ matrix.repo }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).organization }}/${{ matrix.repo }}
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ inputs.branch}}
+          fetch-depth: 0
+          path: ${{ matrix.repo }}
+
+      # - name: Create a new branch
+      #   run: |
+      #     cd ${{ matrix.repo }}
+      #     git checkout -b PR-${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}
+      #     cd -
+
+      - name: Update DAP version in databricks.yml
+        run: |
+          cd ${{ matrix.repo }}
+          export DAP_VERSION="${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}"
+          export DAP_PROD_VERSION=$(echo $DAP_VERSION|cut -d'.' -f -2)
+          echo "Updating DAP version to ${DAP_VERSION} in databricks.yaml"
+          /tmp/yq -i  '.variables.deploy_version.default = strenv(DAP_VERSION)' databricks.yml
+          /tmp/yq -i  '.targets.uat.variables.deploy_version = strenv(DAP_PROD_VERSION)' databricks.yml
+          /tmp/yq -i  '.targets.prod.variables.deploy_version = strenv(DAP_PROD_VERSION)' databricks.yml
+          cat databricks.yml
+
+      - name: Push changes to branch
+        if: ${{ inputs.dry_run == false || inputs.dry_run == 'false' }}
+        run: |
+          cd ${{ matrix.repo }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@github.com"
+          git add databricks.yml
+          git commit -m "Update DAP Databricks Pipelines version to ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}" || echo "No changes to commit"
+          git push origin HEAD
+          cd -
+
+      - name: Tag creation
+        if: ${{ inputs.dry_run == false || inputs.dry_run == 'false' }}
+        run: |
+          cd ${{ matrix.repo }}
+          git tag -a "${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}" -m "Tagging version ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}" || echo "Tag already exists"
+          git push origin "${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}"
+          cd -
+
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v7
+      #   with:
+      #     token: ${{ steps.app-token.outputs.token }}
+      #     commit-message: "Update DAP Databricks Pipelines version to ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}"
+      #     branch: PR-${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}
+      #     title: "Update DAP Databricks Pipelines version to ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}"
+      #     body: |
+      #       This PR updates the DAP Databricks Pipelines version to ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}.
+      #     path: ${{ matrix.repo }}
+
+  repository_scan:
+    name: DAP repositories scan
+    runs-on: self-hosted-dind
+    if: ${{ inputs.dry_run == false || inputs.dry_run == 'false' }}
+    needs:
+      - generate_dap_matrix
+      - update_dap_jobs_version
+    container: mirror.gcr.io/python:3.13-slim
+    strategy:
+      matrix:
+        repo: ${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_repos }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Bundle validation
+        uses: ./.github/actions/trigger-jenkins-workflow
+        with:
+          jenkins_job_name: ${{ matrix.repo }}
+          jenkins_user: ${{ secrets.JENKINS_USER }}
+          jenkins_api_token: ${{ secrets.JENKINS_API_TOKEN }}
+          parameters: |
+            {
+              "BRANCH": "${{ inputs.branch }}",
+              "TAG": "${{ fromJSON(needs.generate_dap_matrix.outputs.matrix).dap_version }}",
+              "SCAN": "true",
+              "DEPLOY": "false"
+            }

@@ -1,0 +1,69 @@
+name: 'Launch Jenkins Workflow'
+description: 'Action to trigger a Jenkins workflow with optional parameters and wait for its completion.'
+author: "David Trigo - david.trigo@clarivate.com"
+
+inputs:
+  JENKINS_URL:
+    description: "Jenkins URL"
+    required: false
+  JENKINS_USER:
+    description: "[Optional] Jenkins User"
+    required: false
+  JENKINS_API_TOKEN:
+    description: "[Optional] Jenkins API Token"
+    required: false
+  JENKINS_JOB_NAME:
+    description: "Jenkins Job Name"
+    required: true
+  SCAN:
+    description: "[Optional] Scan the repository before running the pipeline [true|false]"
+    required: false
+    default: "false"
+  DEPLOY:
+    description: "[Optional] Deploy the pipeline [true|false]"
+    required: false
+    default: "false"
+  PARAMETERS:
+    description: "[Optional] Jenkins Job Parameters"
+    required: false
+    default: "{}"
+  WAIT_FOR_COMPLETION:
+    description: "[Optional] Wait for job completion [true|false]"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+    - name: Copy requirements
+      shell: sh
+      run: cp $GITHUB_ACTION_PATH/scripts/requirements.txt requirements.txt
+    # - name: Install dependencies
+    #   shell: sh
+    #   run: apt-get update && apt-get install -y lsb-release
+    #   env:
+    #     DEBIAN_FRONTEND: noninteractive
+    # - uses: actions/setup-python@v5
+    #   with:
+    #     python-version: '3.13'
+    #     cache: 'pip'
+    #   env:
+    #     PIP_ROOT_USER_ACTION: ignore
+    - name: Install python requirements
+      shell: bash
+      run: pip install -r requirements.txt
+    - name: Launch Scan Python script
+      id: launch_script
+      continue-on-error: true
+      shell: bash
+      if: ${{ inputs.SCAN == 'true' }}
+      run: |
+        cd $GITHUB_ACTION_PATH/scripts
+        ./launcher.py \
+          --jenkins_user "${{ inputs.JENKINS_USER }}" \
+          --jenkins_api_token "${{ inputs.JENKINS_API_TOKEN }}" \
+          --jenkins_job_name "${{ inputs.JENKINS_JOB_NAME }}" \
+          --scan
+        cd -
